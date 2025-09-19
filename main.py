@@ -2,7 +2,9 @@ import os
 import math
 import json
 import time
+import requests
 from PIL import Image
+from io import BytesIO
 from typing import Tuple, List
 
 
@@ -44,6 +46,45 @@ class SatelliteMapDownloader:
         latRad = math.atan(math.sinh(math.pi*(1-2*y/n)))
         latDeg = math.degrees(latRad)
         return (latDeg, lonDeg)
+
+    def calculateZoomLvl(self, bounds: dict, maxTiles: int = 20) -> int:
+        """Calculate appropriate zoom level based on area size"""
+        latDiff = abs(bounds['north'] - bounds['south'])
+        lonDiff = abs(bounds['east'] - bounds['west'])
+
+        # Start with a reasonable zoom level and adjust
+        for zoom in range(10, 18):
+            minX, minY = self.deg2num(bounds['north'], bounds['west'], zoom)
+            maxX, maxY = self.deg2num(bounds['south'], bounds['east'], zoom)
+
+            tilesX = maxX - minX + 1
+            tilesY = maxY - minY + 1
+            totalTiles = tilesX * tilesY
+
+            if totalTiles <= maxTiles:
+                return zoom
+
+        return 15  # Default zoom if calculation fails
+
+    def downloadTile(self, x: int, y: int, zoom: int, serverKey: str = None) -> Image.Image:
+        """Download a single map tile"""
+        if serverKey is None:
+            serverKey = self.currentServer
+
+        url = self.tileServers[serverKey].format(x=x, y=y, z=zoom)
+
+        try:
+            response = requests.get(url, headers={
+                'User-Agent': 'Python Map Downloader 1.0'
+            }, timeout=10)
+            response.raise_for_status()
+
+            # Convert to PIL Image
+            return Image.open(BytesIO(response.content))
+
+        except Exception as e:
+            print(f"Error Downloading tile {x}/{y}/{zoom}: {e}")
+            return Image.new('RGB', (256, 256), color='lightgray')
 
 
 def main():
