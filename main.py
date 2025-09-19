@@ -29,6 +29,22 @@ class SatelliteMapDownloader:
         if not os.path.exists(self.mapsFolder):
             os.makedirs(self.mapsFolder)
 
+    def deg2num(self, latDeg: float, lonDeg: float, zoom: int) -> Tuple[int, int]:
+        """Convert lat/lon to tile numbers"""
+        latRad = math.radians(latDeg)
+        n = 2.0 ** zoom
+        x = int((latDeg+180.0)/360.0*n)
+        y = int((1.0-math.asinh(math.tan(latRad))/math.pi)/2.0*n)
+        return (x, y)
+
+    def num2deg(self, x: int, y: int, zoom: int) -> Tuple[float, float]:
+        """Convert tile numbers to lat/lon"""
+        n = 2.0 ** zoom
+        lonDeg = x/n*360.0 - 180.0
+        latRad = math.atan(math.sinh(math.pi*(1-2*y/n)))
+        latDeg = math.degrees(latRad)
+        return (latDeg, lonDeg)
+
 
 def main():
     """Use case for SatelliteMapDownloader class"""
