@@ -1,0 +1,23 @@
+{
+  "name": "cornerBounds",
+  "imagePath": "maps\\cornerBounds.png",
+  "bounds": {
+    "north": 40.78470081841747,
+    "south": 40.74725696280421,
+    "east": -73.9434814453125,
+    "west": -73.97369384765625,
+    "requestedNorth": 40.7829,
+    "requestedSouth": 40.7489,
+    "requestedEast": -73.9441,
+    "requestedWest": -73.9734
+  },
+  "zoom": 17,
+  "imageSize": {
+    "tilesX": 11,
+    "tilesY": 18,
+    "minX": 38603,
+    "minY": 49246,
+    "maxX": 38613,
+    "maxY": 49263
+  }
+}

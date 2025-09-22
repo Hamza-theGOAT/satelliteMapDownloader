@@ -35,7 +35,7 @@ class SatelliteMapDownloader:
         """Convert lat/lon to tile numbers"""
         latRad = math.radians(latDeg)
         n = 2.0 ** zoom
-        x = int((latDeg+180.0)/360.0*n)
+        x = int((lonDeg+180.0)/360.0*n)
         y = int((1.0-math.asinh(math.tan(latRad))/math.pi)/2.0*n)
         return (x, y)
 
@@ -184,7 +184,7 @@ class SatelliteMapDownloader:
 
         return mapInfo
 
-    def downloadFromCorners(self, corners: List[Tuple[float, float]], mapName: str = 'satelliteSnippet') -> dict:
+    def downloadFromCorners(self, corners: List[Tuple[float, float]], zoom: int = None, mapName: str = 'satelliteSnippet') -> dict:
         """
         Download area defined by 4 corner points
 
@@ -206,7 +206,7 @@ class SatelliteMapDownloader:
             'west': min(lons)
         }
 
-        return self.downloadArea(bounds, mapName)
+        return self.downloadArea(bounds, zoom=zoom, mapName=mapName)
 
 
 def main():
@@ -225,6 +225,17 @@ def main():
     # Downloading with fix bounds directly
     mapInfo = downloader.downloadArea(
         exampleBounds, zoom=17, mapName='exampleBounds')
+
+    # Example with corner points
+    corners = [
+        (40.7829, -73.9734),  # Northwest corner
+        (40.7829, -73.9441),  # Northeast corner
+        (40.7489, -73.9441),  # Southeast corner
+        (40.7489, -73.9734)   # Southwest corner
+    ]
+
+    mapInfo = downloader.downloadFromCorners(
+        corners, zoom=17, mapName='cornerBounds')
 
 
 if __name__ == '__main__':
