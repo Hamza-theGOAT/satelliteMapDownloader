@@ -184,6 +184,30 @@ class SatelliteMapDownloader:
 
         return mapInfo
 
+    def downloadFromCorners(self, corners: List[Tuple[float, float]], mapName: str = 'satelliteSnippet') -> dict:
+        """
+        Download area defined by 4 corner points
+
+        Args:
+            corners: List of (lat, lon) tuples for the 4 corners
+            mapName: Name for the saved map
+
+        Returns:
+            Dictionary with map information
+        """
+        # Calculate bounding box from corners
+        lats = [corner[0] for corner in corners]
+        lons = [corner[1] for corner in corners]
+
+        bounds = {
+            'north': max(lats),
+            'south': min(lats),
+            'east': max(lons),
+            'west': min(lons)
+        }
+
+        return self.downloadArea(bounds, mapName)
+
 
 def main():
     """Use case for SatelliteMapDownloader class"""
@@ -197,6 +221,10 @@ def main():
         'east': -73.9441,   # Eastern boundary
         'west': -73.9734    # Western boundary
     }
+
+    # Downloading with fix bounds directly
+    mapInfo = downloader.downloadArea(
+        exampleBounds, zoom=17, mapName='exampleBounds')
 
 
 if __name__ == '__main__':
