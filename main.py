@@ -86,6 +86,104 @@ class SatelliteMapDownloader:
             print(f"Error Downloading tile {x}/{y}/{zoom}: {e}")
             return Image.new('RGB', (256, 256), color='lightgray')
 
+    def downloadArea(self, bounds: dict, zoom: int = None, mapName: str = 'satelliteSnippet') -> dict:
+        """
+        Download satellite imagery for a rectangular area
+
+        Args:
+            bounds: Dictionary with keys 'north', 'south', 'east', 'west' (in decimal degrees)
+            zoom: Zoom level (calculated automatically if None)
+            mapName: Name for the saved map files
+
+        Returns:
+            Dictionary with map information and file paths
+        """
+        print(f"Downloading map area: {bounds}")
+
+        # Calculate zoom level if not provided
+        if zoom is None:
+            zoom = self.calculateZoomLvl(bounds)
+
+        # Calculate tile boundaries
+        minX, minY = self.deg2num(bounds['north'], bounds['west'], zoom)
+        maxX, maxY = self.deg2num(bounds['south'], bounds['east'], zoom)
+
+        print(f"Tiles needed: X({minX}-{maxX}), Y({minY}-{maxY})")
+
+        tilesX = maxX - minX + 1
+        tilesY = maxY - minY + 1
+        totalTiles = tilesX * tilesY
+
+        print(f"Total tiles to download: {totalTiles}")
+
+        # Create final image
+        finalWidth = tilesX*256
+        finalHeight = tilesY*256
+        finalImage = Image.new('RGB', (finalWidth, finalHeight))
+
+        # Download and stitch tiles
+        downloaded = 0
+        for x in range(minX, maxX+1):
+            for y in range(minY, maxY+1):
+                # Download tile
+                tile = self.downloadTile(x, y, zoom)
+
+                # Calculate position in final image
+                posX = (x - minX) * 256
+                posY = (y - minY) * 256
+
+                # Paste tile into final image
+                finalImage.paste(tile, (posX, posY))
+
+                downloaded += 1
+                print(f"Download tile {downloaded}/{totalTiles}")
+
+                # Be nice to servers
+                time.sleep(0.1)
+
+        # Save the stitched image
+        imagePath = os.path.join(self.mapsFolder, f"{mapName}.png")
+        finalImage.save(imagePath, "PNG")
+
+        # Calculate actual bounds of the downloaded area (tile boundaries)
+        actualNorth, actualWest = self.num2deg(minX, minY, zoom)
+        actualSouth, actualEast = self.num2deg(maxX+1, maxY+1, zoom)
+
+        # Create metadata
+        mapInfo = {
+            'name': mapName,
+            'imagePath': imagePath,
+            'bounds': {
+                'north': actualNorth,
+                'south': actualSouth,
+                'east': actualEast,
+                'west': actualWest,
+                'requestedNorth': bounds['north'],
+                'requestedSouth': bounds['south'],
+                'requestedEast': bounds['east'],
+                'requestedWest': bounds['west']
+            },
+            'zoom': zoom,
+            'imageSize': {
+                'tilesX': tilesX,
+                'tilesY': tilesY,
+                'minX': minX,
+                'minY': minY,
+                'maxX': maxX,
+                'maxY': maxY
+            }
+        }
+
+        # Save metadata
+        metadataPath = os.path.join(self.mapsFolder, f"{mapName}_info.json")
+        with open(metadataPath, 'w') as f:
+            json.dump(mapInfo, f, indent=2)
+
+        print(f"Map saved: {imagePath}")
+        print(f"Metadata saved: {metadataPath}")
+
+        return mapInfo
+
 
 def main():
     """Use case for SatelliteMapDownloader class"""
