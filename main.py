@@ -8,6 +8,16 @@ from io import BytesIO
 from typing import Tuple, List
 
 
+def safeRun(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"Error in {func.__name__}: [{type(e).__name__}] ...")
+            print(f"{e}")
+    return wrapper
+
+
 class SatelliteMapDownloader:
     """Downloads and manages satellite map tiles for offline use"""
 
@@ -223,8 +233,8 @@ def main():
     }
 
     # Downloading with fix bounds directly
-    mapInfo = downloader.downloadArea(
-        exampleBounds, zoom=17, mapName='exampleBounds')
+    # mapInfo = downloader.downloadArea(
+    #     exampleBounds, zoom=17, mapName='exampleBounds')
 
     # Example with corner points
     corners = [
@@ -232,6 +242,13 @@ def main():
         (40.7829, -73.9441),  # Northeast corner
         (40.7489, -73.9441),  # Southeast corner
         (40.7489, -73.9734)   # Southwest corner
+    ]
+
+    corners = [
+        (40.959112, -73.963972),
+        (40.948011, -73.699405),
+        (40.647589, -73.700222),
+        (40.649447, -74.074208)
     ]
 
     mapInfo = downloader.downloadFromCorners(
